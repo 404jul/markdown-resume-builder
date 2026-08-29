@@ -1,0 +1,19 @@
+.resume-page[data-resume-theme="classic"] {
+  --resume-font-body: Georgia, "Times New Roman", serif;
+  --resume-font-heading: Arial, Helvetica, sans-serif;
+  --resume-text: #202020;
+  --resume-muted: #555;
+  --resume-accent: #171717;
+  --resume-rule: #777;
+  --resume-section-gap: 13pt;
+}
+
+.resume-page[data-resume-theme="classic"] h1,
+.resume-page[data-resume-theme="classic"] h1 + p {
+  text-align: center;
+}
+
+.resume-page[data-resume-theme="classic"] h2 {
+  padding-bottom: 2.5pt;
+  border-bottom: 1px solid var(--resume-rule);
+}

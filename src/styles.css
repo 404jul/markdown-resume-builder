@@ -1,0 +1,258 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: light;
+}
+
+@plugin "daisyui/theme" {
+  name: "business";
+  default: true;
+  prefersdark: false;
+  color-scheme: dark;
+  --color-base-100: oklch(24.353% 0 0);
+  --color-base-200: oklch(22.648% 0 0);
+  --color-base-300: oklch(20.944% 0 0);
+  --color-base-content: oklch(84.87% 0 0);
+  --color-primary: oklch(41.703% 0.099 251.473);
+  --color-primary-content: oklch(88.34% 0.019 251.473);
+  --color-secondary: oklch(64.092% 0.027 229.389);
+  --color-secondary-content: oklch(12.818% 0.005 229.389);
+  --color-accent: oklch(67.271% 0.167 35.791);
+  --color-accent-content: oklch(13.454% 0.033 35.791);
+  --color-neutral: oklch(27.441% 0.013 253.041);
+  --color-neutral-content: oklch(85.488% 0.002 253.041);
+  --color-info: oklch(62.616% 0.143 240.033);
+  --color-info-content: oklch(12.523% 0.028 240.033);
+  --color-success: oklch(70.226% 0.094 156.596);
+  --color-success-content: oklch(14.045% 0.018 156.596);
+  --color-warning: oklch(77.482% 0.115 81.519);
+  --color-warning-content: oklch(15.496% 0.023 81.519);
+  --color-error: oklch(51.61% 0.146 29.674);
+  --color-error-content: oklch(90.322% 0.029 29.674);
+  --radius-selector: 2rem;
+  --radius-field: 2rem;
+  --radius-box: 2rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 0;
+  --noise: 0;
+}
+
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+html {
+  min-width: 320px;
+  background: var(--color-base-200);
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+button,
+select {
+  font: inherit;
+}
+
+.app-shell {
+  background-image:
+    radial-gradient(circle at 8% 0%, color-mix(in oklab, var(--color-primary) 10%, transparent) 0, transparent 27rem),
+    radial-gradient(circle at 92% 10%, color-mix(in oklab, var(--color-secondary) 8%, transparent) 0, transparent 24rem);
+}
+
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.workspace {
+  display: grid;
+  gap: 1rem;
+  align-items: start;
+}
+
+.workspace-split {
+  grid-template-columns: minmax(340px, 0.78fr) minmax(560px, 1.22fr);
+}
+
+.workspace-write,
+.workspace-preview {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.editor-panel {
+  display: flex;
+  height: calc(100dvh - 9.75rem);
+  min-height: 34rem;
+  overflow: hidden;
+}
+
+.editor-toolbar {
+  flex: 0 0 auto;
+}
+
+.markdown-editor {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 1.25rem;
+  tab-size: 2;
+}
+
+.markdown-editor:focus {
+  box-shadow: inset 3px 0 0 color-mix(in oklab, var(--color-primary) 65%, transparent);
+}
+
+.preview-panel {
+  min-width: 0;
+}
+
+.preview-stage {
+  display: block;
+  max-height: calc(100dvh - 12.25rem);
+  min-height: 34rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: 1.5rem;
+}
+
+.preview-stage:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.preview-zoom-surface {
+  width: max-content;
+  min-width: 100%;
+  min-height: 100%;
+}
+
+.preview-page-zoom {
+  width: max-content;
+  margin-inline: auto;
+}
+
+.theme-card:has(input:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.theme-card-preview {
+  position: relative;
+  height: 17rem;
+  overflow: hidden;
+  border-bottom: 1px solid var(--color-base-300);
+  background: var(--color-base-200);
+}
+
+.theme-card-document {
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  width: 8.5in;
+  margin-left: -4.25in;
+  transform: scale(0.31);
+  transform-origin: top center;
+  pointer-events: none;
+}
+
+.theme-card-document .resume-page {
+  box-shadow: 0 10px 30px rgb(15 23 42 / 18%);
+}
+
+.screen-hidden {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  .workspace-split {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-panel {
+    height: 58dvh;
+    min-height: 28rem;
+  }
+
+  .preview-stage {
+    max-height: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-main {
+    padding: 0.65rem;
+  }
+
+  .control-bar {
+    margin-bottom: 0.65rem;
+    border-radius: 0.85rem;
+  }
+
+  .workspace {
+    gap: 0.65rem;
+  }
+
+  .preview-panel,
+  .editor-panel {
+    border-radius: 0.85rem;
+  }
+
+  .preview-stage {
+    padding: 0.75rem;
+  }
+}
+
+@media print {
+  html,
+  body,
+  #root,
+  .app-shell {
+    min-height: auto !important;
+    background: white !important;
+  }
+
+  .app-header,
+  .control-bar,
+  .editor-panel,
+  .preview-chrome,
+  .theme-dialog {
+    display: none !important;
+  }
+
+  .app-main {
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .workspace,
+  .preview-panel,
+  .preview-stage,
+  .preview-zoom-surface,
+  .preview-page-zoom {
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: white !important;
+    box-shadow: none !important;
+  }
+
+  .preview-page-zoom {
+    zoom: 1 !important;
+  }
+}

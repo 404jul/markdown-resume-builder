@@ -1,0 +1,168 @@
+@page {
+  size: Letter;
+  margin: 0.52in 0.65in;
+}
+
+.resume-page {
+  --resume-font-body: Arial, Helvetica, sans-serif;
+  --resume-font-heading: Arial, Helvetica, sans-serif;
+  --resume-text: #171717;
+  --resume-muted: #525252;
+  --resume-accent: #171717;
+  --resume-rule: #a3a3a3;
+  --resume-section-gap: 13pt;
+
+  box-sizing: border-box;
+  width: 8.5in;
+  min-height: 11in;
+  flex: 0 0 8.5in;
+  padding: 0.52in 0.65in;
+  color: var(--resume-text);
+  background: #fff;
+  font-family: var(--resume-font-body);
+  font-size: 10.25pt;
+  font-weight: 400;
+  line-height: 1.38;
+  overflow-wrap: anywhere;
+  box-shadow: 0 18px 50px rgb(15 23 42 / 14%);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.resume-page *,
+.resume-page *::before,
+.resume-page *::after {
+  box-sizing: border-box;
+}
+
+.resume-page > :first-child {
+  margin-top: 0;
+}
+
+.resume-page > :last-child {
+  margin-bottom: 0;
+}
+
+.resume-page h1,
+.resume-page h2,
+.resume-page h3,
+.resume-page h4,
+.resume-page h5,
+.resume-page h6 {
+  color: var(--resume-accent);
+  font-family: var(--resume-font-heading);
+  font-weight: 700;
+  line-height: 1.16;
+  break-after: avoid;
+}
+
+.resume-page h1 {
+  margin: 0 0 5pt;
+  font-size: 24pt;
+  letter-spacing: -0.025em;
+}
+
+.resume-page h2 {
+  margin: var(--resume-section-gap) 0 6pt;
+  font-size: 11.5pt;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.resume-page h3 {
+  margin: 8pt 0 1.5pt;
+  font-size: 10.6pt;
+}
+
+.resume-page h4,
+.resume-page h5,
+.resume-page h6 {
+  margin: 7pt 0 2pt;
+  font-size: 10.25pt;
+}
+
+.resume-page p {
+  margin: 0 0 5pt;
+  color: inherit;
+  orphans: 2;
+  widows: 2;
+}
+
+.resume-page ul,
+.resume-page ol {
+  margin: 3pt 0 6pt;
+  padding-left: 18pt;
+}
+
+.resume-page ul {
+  list-style: disc;
+}
+
+.resume-page ol {
+  list-style: decimal;
+}
+
+.resume-page li {
+  margin: 0 0 2.5pt;
+  padding-left: 1.5pt;
+  break-inside: avoid;
+}
+
+.resume-page li::marker {
+  color: var(--resume-accent);
+}
+
+.resume-page hr {
+  height: 0;
+  margin: 10pt 0;
+  border: 0;
+  border-top: 1px solid var(--resume-rule);
+}
+
+.resume-page a {
+  color: inherit;
+  text-decoration-color: color-mix(in srgb, currentColor 55%, transparent);
+  text-decoration-thickness: 0.06em;
+  text-underline-offset: 0.12em;
+}
+
+.resume-page strong {
+  font-weight: 700;
+}
+
+.resume-page em {
+  color: var(--resume-muted);
+}
+
+.resume-page blockquote {
+  margin: 6pt 0;
+  padding-left: 10pt;
+  border-left: 2px solid var(--resume-rule);
+  color: var(--resume-muted);
+}
+
+.resume-page code {
+  font-family: "SFMono-Regular", Consolas, monospace;
+  font-size: 0.92em;
+}
+
+.resume-inline-icon {
+  display: inline-block;
+  width: 0.94em;
+  height: 0.94em;
+  margin-right: 0.18em;
+  color: var(--resume-accent);
+  vertical-align: -0.12em;
+  stroke-width: 1.8;
+}
+
+@media print {
+  .resume-page {
+    width: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
+}

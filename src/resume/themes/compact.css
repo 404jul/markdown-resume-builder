@@ -1,0 +1,47 @@
+.resume-page[data-resume-theme="compact"] {
+  --resume-font-body: Arial, Helvetica, sans-serif;
+  --resume-font-heading: Arial, Helvetica, sans-serif;
+  --resume-text: #171717;
+  --resume-muted: #4b5563;
+  --resume-accent: #111827;
+  --resume-rule: #9ca3af;
+  --resume-section-gap: 9pt;
+
+  padding: 0.45in 0.55in;
+  font-size: 9.6pt;
+  line-height: 1.28;
+}
+
+.resume-page[data-resume-theme="compact"] h1 {
+  margin-bottom: 3pt;
+  font-size: 21pt;
+}
+
+.resume-page[data-resume-theme="compact"] h2 {
+  margin-bottom: 4pt;
+  padding-bottom: 1.5pt;
+  border-bottom: 1px solid var(--resume-rule);
+  font-size: 10.5pt;
+}
+
+.resume-page[data-resume-theme="compact"] h3 {
+  margin-top: 5pt;
+  font-size: 9.9pt;
+}
+
+.resume-page[data-resume-theme="compact"] p,
+.resume-page[data-resume-theme="compact"] li {
+  margin-bottom: 1.5pt;
+}
+
+.resume-page[data-resume-theme="compact"] ul,
+.resume-page[data-resume-theme="compact"] ol {
+  margin-top: 2pt;
+  margin-bottom: 4pt;
+}
+
+@media print {
+  .resume-page[data-resume-theme="compact"] {
+    padding: 0;
+  }
+}

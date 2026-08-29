@@ -1,0 +1,25 @@
+.resume-page[data-resume-theme="modern"] {
+  --resume-font-body: Arial, Helvetica, sans-serif;
+  --resume-font-heading: Arial, Helvetica, sans-serif;
+  --resume-text: #172033;
+  --resume-muted: #526079;
+  --resume-accent: #2457a6;
+  --resume-rule: #cbd5e1;
+  --resume-section-gap: 14pt;
+}
+
+.resume-page[data-resume-theme="modern"] h1 {
+  font-size: 26pt;
+  font-weight: 800;
+}
+
+.resume-page[data-resume-theme="modern"] h2 {
+  padding-left: 7pt;
+  border-left: 3px solid var(--resume-accent);
+  letter-spacing: 0.09em;
+}
+
+.resume-page[data-resume-theme="modern"] hr {
+  border-top-width: 2px;
+  border-color: var(--resume-accent);
+}
