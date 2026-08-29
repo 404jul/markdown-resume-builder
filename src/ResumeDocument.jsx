@@ -3,10 +3,12 @@ import ReactMarkdown from "react-markdown";
 import { Mail, MapPin, Phone, Star } from "lucide-react";
 import { splitIconTokens } from "./iconTokens.js";
 
-function GithubIcon(props) {
+export function GithubIcon({ size, ...props }) {
   return (
     <svg
       {...props}
+      height={size}
+      width={size}
       fill="none"
       stroke="currentColor"
       strokeLinecap="round"
@@ -19,10 +21,12 @@ function GithubIcon(props) {
   );
 }
 
-function LinkedinIcon(props) {
+export function LinkedinIcon({ size, ...props }) {
   return (
     <svg
       {...props}
+      height={size}
+      width={size}
       fill="none"
       stroke="currentColor"
       strokeLinecap="round"

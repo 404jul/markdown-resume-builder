@@ -1,6 +1,7 @@
+/* Keep browser header/footer margin boxes unavailable; the resume owns its inset. */
 @page {
   size: Letter;
-  margin: 0.52in 0.65in;
+  margin: 0;
 }
 
 .resume-page {
@@ -71,7 +72,8 @@
 
 .resume-page h3 {
   margin: 8pt 0 1.5pt;
-  font-size: 10.6pt;
+  font-size: 11.25pt;
+  letter-spacing: -0.01em;
 }
 
 .resume-page h4,
@@ -158,10 +160,7 @@
 
 @media print {
   .resume-page {
-    width: auto !important;
-    min-height: 0 !important;
     margin: 0 !important;
-    padding: 0 !important;
     overflow: visible !important;
     box-shadow: none !important;
   }

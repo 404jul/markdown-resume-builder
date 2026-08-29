@@ -26,7 +26,7 @@
 
 .resume-page[data-resume-theme="compact"] h3 {
   margin-top: 5pt;
-  font-size: 9.9pt;
+  font-size: 10.5pt;
 }
 
 .resume-page[data-resume-theme="compact"] p,
@@ -40,8 +40,3 @@
   margin-bottom: 4pt;
 }
 
-@media print {
-  .resume-page[data-resume-theme="compact"] {
-    padding: 0;
-  }
-}

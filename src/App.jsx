@@ -2,26 +2,39 @@ import { useEffect, useRef, useState } from "react";
 import {
   Check,
   Bold,
+  BookOpen,
   Columns2,
   Download,
   Eye,
+  Heading1,
   Heading2,
+  Heading3,
   List,
   Minus,
   Moon,
   Palette,
   PenLine,
-  Printer,
   Sun,
   Upload,
   ZoomIn,
   ZoomOut,
+  Mail,
+  MapPin,
+  Phone,
+  RotateCcw,
+  Shapes,
+  Star,
 } from "lucide-react";
-import ResumeDocument from "./ResumeDocument.jsx";
+import ResumeDocument, {
+  GithubIcon,
+  LinkedinIcon,
+} from "./ResumeDocument.jsx";
+import { ICON_NAMES, iconCompletionAt } from "./iconTokens.js";
 
 const DOCUMENT_KEY = "resume-md:document";
 const RESUME_THEME_KEY = "resume-md:resume-theme";
 const APP_THEME_KEY = "resume-md:app-theme";
+const PREVIEW_ZOOM_KEY = "resume-md:preview-zoom";
 
 const RESUME_THEMES = [
   { id: "classic", name: "Classic", description: "Traditional serif" },
@@ -33,6 +46,33 @@ const VIEWS = [
   { id: "write", name: "Write", icon: PenLine },
   { id: "split", name: "Split", icon: Columns2 },
   { id: "preview", name: "Preview", icon: Eye },
+];
+
+const ICON_LABELS = {
+  email: "Email",
+  phone: "Phone",
+  location: "Location",
+  github: "GitHub",
+  linkedin: "LinkedIn",
+  star: "Star",
+};
+
+const ICON_COMPONENTS = {
+  email: Mail,
+  phone: Phone,
+  location: MapPin,
+  github: GithubIcon,
+  linkedin: LinkedinIcon,
+  star: Star,
+};
+
+const MARKDOWN_GUIDE = [
+  ["# Name / ## Section / ### Entry", "Headings"],
+  ["**bold**", "Bold text"],
+  ["- achievement", "Bullet list"],
+  ["  - supporting detail", "Nested bullet · Tab / Shift+Tab"],
+  ["---", "Horizontal rule"],
+  ["{github}", "Icon token"],
 ];
 
 const DEFAULT_SOURCE = `# John Doe
@@ -95,10 +135,46 @@ function resumeFileName(source) {
   );
 }
 
+function editorCaretPosition(editor) {
+  const computed = getComputedStyle(editor);
+  const mirror = document.createElement("div");
+
+  for (let index = 0; index < computed.length; index += 1) {
+    const property = computed[index];
+    mirror.style.setProperty(property, computed.getPropertyValue(property));
+  }
+
+  mirror.style.position = "fixed";
+  mirror.style.inset = "0 auto auto 0";
+  mirror.style.visibility = "hidden";
+  mirror.style.overflow = "hidden";
+  mirror.style.whiteSpace = "pre-wrap";
+  mirror.style.overflowWrap = "break-word";
+  mirror.textContent = editor.value.slice(0, editor.selectionStart);
+
+  const caret = document.createElement("span");
+  caret.textContent = "\u200b";
+  mirror.append(caret);
+  document.body.append(mirror);
+
+  const position = {
+    left: caret.offsetLeft - editor.scrollLeft,
+    top:
+      caret.offsetTop +
+      (Number.parseFloat(computed.lineHeight) || 24) -
+      editor.scrollTop,
+  };
+  mirror.remove();
+  return position;
+}
+
 export default function App() {
   const editorRef = useRef(null);
   const fileInputRef = useRef(null);
   const themeDialogRef = useRef(null);
+  const docsDialogRef = useRef(null);
+  const iconPickerRef = useRef(null);
+  const previewStageRef = useRef(null);
   const [source, setSource] = useState(() =>
     readStoredValue(DOCUMENT_KEY, DEFAULT_SOURCE),
   );
@@ -115,9 +191,35 @@ export default function App() {
   });
   const [view, setView] = useState("split");
   const [saveStatus, setSaveStatus] = useState("Saved locally");
-  const [previewZoom, setPreviewZoom] = useState(1);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const [previewZoom, setPreviewZoom] = useState(() => {
+    const storedZoom = Number(readStoredValue(PREVIEW_ZOOM_KEY, "1"));
+    return Number.isFinite(storedZoom) &&
+      storedZoom >= 0.5 &&
+      storedZoom <= 2
+      ? storedZoom
+      : 1;
+  });
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
+  const [iconCompletion, setIconCompletion] = useState(null);
+  const [activeIconIndex, setActiveIconIndex] = useState(0);
+  const [iconMenuPosition, setIconMenuPosition] = useState({ left: 8, top: 8 });
   const selectedResumeTheme =
     RESUME_THEMES.find(({ id }) => id === resumeTheme) ?? RESUME_THEMES[0];
+  const matchingIcons = iconCompletion?.names ?? [];
+
+  useEffect(() => {
+    if (!iconPickerOpen) return;
+
+    function closeIconPicker(event) {
+      if (!iconPickerRef.current?.contains(event.target)) {
+        setIconPickerOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", closeIconPicker);
+    return () => document.removeEventListener("pointerdown", closeIconPicker);
+  }, [iconPickerOpen]);
 
   useEffect(() => {
     try {
@@ -135,6 +237,35 @@ export default function App() {
       // The selected theme still works for this session.
     }
   }, [resumeTheme]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(PREVIEW_ZOOM_KEY, String(previewZoom));
+    } catch {
+      // The selected zoom still works for this session.
+    }
+  }, [previewZoom]);
+
+  useEffect(() => {
+    const preview = previewStageRef.current;
+    if (!preview) return;
+
+    function handleWheel(event) {
+      if ((!event.metaKey && !event.ctrlKey) || event.deltaY === 0) return;
+
+      event.preventDefault();
+      const unit =
+        event.deltaMode === WheelEvent.DOM_DELTA_LINE
+          ? 16
+          : event.deltaMode === WheelEvent.DOM_DELTA_PAGE
+            ? preview.clientHeight
+            : 1;
+      adjustPreviewZoom((-event.deltaY * unit) / 1000);
+    }
+
+    preview.addEventListener("wheel", handleWheel, { passive: false });
+    return () => preview.removeEventListener("wheel", handleWheel);
+  }, []);
 
   useEffect(() => {
     document.documentElement.dataset.theme = appTheme;
@@ -197,6 +328,119 @@ export default function App() {
     });
   }
 
+  function positionIconSuggestions(editor, count) {
+    const caret = editorCaretPosition(editor);
+    const menuWidth = 208;
+    const menuHeight = Math.min(count * 32 + 8, 208);
+    const left = Math.max(
+      8,
+      Math.min(caret.left, editor.clientWidth - menuWidth - 8),
+    );
+    const top = caret.top + menuHeight <= editor.clientHeight
+      ? caret.top
+      : Math.max(8, caret.top - menuHeight - 24);
+
+    setIconMenuPosition({ left, top });
+  }
+
+  function syncIconCompletion(value, cursor, editor = editorRef.current) {
+    const completion = iconCompletionAt(value, cursor);
+    setIconCompletion(completion);
+    setActiveIconIndex(0);
+    if (!completion || !editor) return;
+
+    requestAnimationFrame(() =>
+      positionIconSuggestions(editor, completion.names.length),
+    );
+  }
+
+  function completeIcon(name) {
+    const editor = editorRef.current;
+    if (!editor || !iconCompletion) return;
+
+    const token = `{${name}}`;
+    const cursor = editor.selectionStart;
+    const nextSource =
+      editor.value.slice(0, iconCompletion.start) +
+      token +
+      editor.value.slice(cursor);
+    const nextCursor = iconCompletion.start + token.length;
+
+    setSaveStatus("Saving…");
+    setSource(nextSource);
+    setIconCompletion(null);
+    requestAnimationFrame(() => {
+      editor.focus();
+      editor.setSelectionRange(nextCursor, nextCursor);
+    });
+  }
+
+  function changeEditorIndent(editor, outdent) {
+    const value = editor.value;
+    const start = editor.selectionStart;
+    const end = editor.selectionEnd;
+    const lineStart = value.lastIndexOf("\n", start - 1) + 1;
+    const selectionEnd =
+      end > start && value[end - 1] === "\n" ? end - 1 : end;
+    const nextLine = value.indexOf("\n", selectionEnd);
+    const lineEnd = nextLine === -1 ? value.length : nextLine;
+    const block = value.slice(lineStart, lineEnd);
+    const lines = block.split("\n");
+    const nextLines = lines.map((line) =>
+      outdent ? line.replace(/^(?: {1,2}|\t)/, "") : `  ${line}`,
+    );
+    const nextBlock = nextLines.join("\n");
+    if (nextBlock === block) return;
+
+    setSaveStatus("Saving…");
+    setSource(
+      `${value.slice(0, lineStart)}${nextBlock}${value.slice(lineEnd)}`,
+    );
+    setIconCompletion(null);
+    requestAnimationFrame(() => {
+      editor.focus();
+      editor.setSelectionRange(
+        start + nextLines[0].length - lines[0].length,
+        end + nextBlock.length - block.length,
+      );
+    });
+  }
+
+  function handleEditorKeyDown(event) {
+    if (
+      event.key === "Tab" &&
+      (event.shiftKey || !iconCompletion || matchingIcons.length === 0)
+    ) {
+      event.preventDefault();
+      changeEditorIndent(event.currentTarget, event.shiftKey);
+      return;
+    }
+
+    if (!iconCompletion || matchingIcons.length === 0) return;
+
+    switch (event.key) {
+      case "ArrowDown":
+        event.preventDefault();
+        setActiveIconIndex((index) => (index + 1) % matchingIcons.length);
+        break;
+      case "ArrowUp":
+        event.preventDefault();
+        setActiveIconIndex(
+          (index) => (index - 1 + matchingIcons.length) % matchingIcons.length,
+        );
+        break;
+      case "Enter":
+      case "Tab":
+        event.preventDefault();
+        completeIcon(matchingIcons[activeIconIndex]);
+        break;
+      case "Escape":
+        event.preventDefault();
+        setIconCompletion(null);
+        break;
+    }
+  }
+
   async function importMarkdown(event) {
     const input = event.currentTarget;
     const file = input.files?.[0];
@@ -223,16 +467,128 @@ export default function App() {
     URL.revokeObjectURL(url);
   }
 
-  function printResume() {
-    const previousTitle = document.title;
-    document.title = resumeFileName(source);
-    window.print();
-    document.title = previousTitle;
+  function startOver() {
+    const confirmed = window.confirm(
+      "Start over with the starter template? Your current local draft will be replaced.",
+    );
+    if (!confirmed) return;
+
+    setSource(DEFAULT_SOURCE);
+    setSaveStatus("Saved locally");
+    setIconCompletion(null);
+    requestAnimationFrame(() => {
+      const editor = editorRef.current;
+      editor?.focus();
+      editor?.setSelectionRange(0, 0);
+    });
+  }
+
+  async function exportPdf() {
+    const resume = document.querySelector(
+      ".preview-page-zoom > .resume-page",
+    );
+    if (!resume || exportingPdf) return;
+
+    const exportPage = resume.cloneNode(true);
+    exportPage.classList.add("pdf-export-page");
+
+    // dompdf trims normal-space edges from separate inline text runs.
+    const textWalker = document.createTreeWalker(
+      exportPage,
+      NodeFilter.SHOW_TEXT,
+    );
+    let textNode = textWalker.nextNode();
+    while (textNode) {
+      textNode.data = textNode.data.replace(/^ +| +$/g, "\u00a0");
+      textNode = textWalker.nextNode();
+    }
+
+    for (const heading of Array.from(exportPage.querySelectorAll("h3"))) {
+      const entry = document.createElement("div");
+      entry.className = "pdf-export-entry";
+      entry.setAttribute("divisionDisable", "");
+      heading.before(entry);
+
+      let sibling = heading.nextSibling;
+      entry.append(heading);
+      while (
+        sibling &&
+        !(sibling instanceof Element && /^H[1-6]$/.test(sibling.tagName))
+      ) {
+        const next = sibling.nextSibling;
+        entry.append(sibling);
+        sibling = next;
+      }
+    }
+
+    for (const list of exportPage.querySelectorAll("ul, ol")) {
+      const ordered = list.tagName === "OL";
+      const start = ordered ? Number(list.getAttribute("start") ?? 1) : 1;
+
+      Array.from(list.children).forEach((item, index) => {
+        if (item.tagName !== "LI") return;
+
+        const marker = document.createElement("span");
+        marker.className = "pdf-list-marker";
+        marker.textContent = ordered ? `${start + index}.` : "•";
+
+        const content = document.createElement("div");
+        content.className = "pdf-list-content";
+        content.append(...item.childNodes);
+
+        item.classList.add("pdf-list-item");
+        item.setAttribute("divisionDisable", "");
+        item.append(marker, content);
+      });
+    }
+    document.body.append(exportPage);
+    const exportTop = exportPage.getBoundingClientRect().top;
+    const pageBodyHeight = (11 - 0.52 * 2) * 96;
+    let pageTop = 0;
+
+    for (const entry of exportPage.querySelectorAll(".pdf-export-entry")) {
+      const bounds = entry.getBoundingClientRect();
+      const top = bounds.top - exportTop;
+      const bottom = bounds.bottom - exportTop;
+
+      if (top > pageTop && bottom - pageTop > pageBodyHeight) {
+        entry.setAttribute("pageBreak", "");
+        pageTop = top;
+      }
+    }
+    setExportingPdf(true);
+
+    try {
+      const { downloadPDF } = await import("dompdf.js");
+      await document.fonts.ready;
+      await downloadPDF(
+        exportPage,
+        {
+          backgroundColor: "#fff",
+          compress: true,
+          format: "letter",
+          marginPt: [0, 46.8, 0, 46.8],
+          pageConfig: {
+            header: { content: "", height: 37.44 },
+            footer: { content: "", height: 37.44 },
+          },
+          pagination: true,
+        },
+        `${resumeFileName(source)}.pdf`,
+      );
+      setSaveStatus("Saved locally");
+    } catch (error) {
+      console.error("PDF export failed", error);
+      setSaveStatus("PDF export failed");
+    } finally {
+      exportPage.remove();
+      setExportingPdf(false);
+    }
   }
 
   function adjustPreviewZoom(change) {
     setPreviewZoom((current) =>
-      Math.min(2, Math.max(0.5, Number((current + change).toFixed(1)))),
+      Math.min(2, Math.max(0.5, Number((current + change).toFixed(3)))),
     );
   }
 
@@ -275,7 +631,7 @@ export default function App() {
           </div>
 
           <div className="app-navbar-tools flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
-            <div aria-label="Editor view" className="join shrink-0" role="tablist">
+            <div aria-label="Editor view" className="join shrink-0 overflow-hidden rounded-field bg-base-200" role="tablist">
               {VIEWS.map(({ id, name, icon: Icon }) => (
                 <button
                   aria-selected={view === id}
@@ -298,7 +654,7 @@ export default function App() {
               type="button"
             >
               <Palette size={16} />
-              <span>{selectedResumeTheme.name}</span>
+              <span>Theme</span>
             </button>
           </div>
 
@@ -326,6 +682,15 @@ export default function App() {
             </button>
             <button
               className="btn btn-ghost btn-sm"
+              onClick={startOver}
+              title="Start over with the starter template"
+              type="button"
+            >
+              <RotateCcw size={16} />
+              <span className="hidden xl:inline">Start over</span>
+            </button>
+            <button
+              className="btn btn-ghost btn-sm"
               onClick={downloadMarkdown}
               title="Download Markdown"
               type="button"
@@ -334,13 +699,17 @@ export default function App() {
               <span className="hidden lg:inline">Markdown</span>
             </button>
             <button
+              aria-busy={exportingPdf}
               className="btn btn-primary btn-sm"
-              onClick={printResume}
-              title="Open the browser print dialog and choose Save as PDF"
+              disabled={exportingPdf}
+              onClick={exportPdf}
+              title="Export resume as PDF"
               type="button"
             >
-              <Printer size={16} />
-              <span className="hidden sm:inline">Print / PDF</span>
+              <Download size={16} />
+              <span className="hidden sm:inline">
+                {exportingPdf ? "Exporting…" : "Export PDF"}
+              </span>
             </button>
             <button
               aria-label={`Use ${appTheme === "business" ? "light" : "business"} theme`}
@@ -361,13 +730,31 @@ export default function App() {
           <section className={`editor-panel card border border-base-300 bg-base-100 shadow-sm ${view === "preview" ? "screen-hidden" : ""}`}>
             <div className="editor-toolbar flex flex-wrap items-center gap-1 border-b border-base-300 p-2">
               <button
-                aria-label="Insert section heading"
+                aria-label="Insert resume title (H1)"
+                className="btn btn-ghost btn-sm"
+                onClick={() => insertBlock("# Resume title", "Resume title")}
+                title="Resume title (H1)"
+                type="button"
+              >
+                <Heading1 size={17} />
+              </button>
+              <button
+                aria-label="Insert section heading (H2)"
                 className="btn btn-ghost btn-sm"
                 onClick={() => insertBlock("## Section title", "Section title")}
-                title="Section heading"
+                title="Section heading (H2)"
                 type="button"
               >
                 <Heading2 size={17} />
+              </button>
+              <button
+                aria-label="Insert entry heading (H3)"
+                className="btn btn-ghost btn-sm"
+                onClick={() => insertBlock("### Entry title", "Entry title")}
+                title="Entry heading (H3)"
+                type="button"
+              >
+                <Heading3 size={17} />
               </button>
               <button
                 aria-label="Bold selected text"
@@ -397,38 +784,150 @@ export default function App() {
                 <Minus size={17} />
               </button>
               <div className="mx-1 h-5 w-px bg-base-300" />
-              <select
-                aria-label="Insert icon token"
-                className="select select-ghost select-sm w-32"
-                defaultValue=""
-                onChange={(event) => {
-                  insertText(`${event.target.value} `);
-                  event.target.value = "";
+              <div
+                className="relative"
+                ref={iconPickerRef}
+                onBlur={(event) => {
+                  if (!event.currentTarget.contains(event.relatedTarget)) {
+                    setIconPickerOpen(false);
+                  }
                 }}
-                title="Insert icon token"
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") setIconPickerOpen(false);
+                }}
               >
-                <option disabled value="">Add icon</option>
-                <option value="{email}">Email</option>
-                <option value="{phone}">Phone</option>
-                <option value="{location}">Location</option>
-                <option value="{github}">GitHub</option>
-                <option value="{linkedin}">LinkedIn</option>
-                <option value="{star}">Star</option>
-              </select>
-              <span className="ml-auto hidden font-mono text-[11px] text-base-content/45 xl:inline"># headings · **bold** · - bullets · --- rule · {"{github}"} icons</span>
+                <button
+                  aria-controls="icon-picker"
+                  aria-expanded={iconPickerOpen}
+                  aria-haspopup="menu"
+                  className="btn btn-ghost btn-sm gap-1.5"
+                  onClick={() => setIconPickerOpen((open) => !open)}
+                  title="Insert icon"
+                  type="button"
+                >
+                  <Shapes size={16} />
+                  <span>Add icon</span>
+                </button>
+                {iconPickerOpen && (
+                  <div
+                    aria-label="Insert icon"
+                    className="absolute left-0 top-full z-30 mt-1 grid w-64 grid-cols-3 gap-1 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg"
+                    id="icon-picker"
+                    role="menu"
+                  >
+                    {ICON_NAMES.map((name) => {
+                      const Icon = ICON_COMPONENTS[name];
+                      return (
+                        <button
+                          aria-label={`Insert ${ICON_LABELS[name]} icon`}
+                          className="btn btn-ghost h-auto flex-col gap-1 px-3 py-2"
+                          key={name}
+                          onClick={() => {
+                            insertText(`{${name}} `);
+                            setIconPickerOpen(false);
+                          }}
+                          role="menuitem"
+                          type="button"
+                        >
+                          <Icon size={18} />
+                          <span className="text-xs">{ICON_LABELS[name]}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <button
+                aria-haspopup="dialog"
+                className="btn btn-ghost btn-sm ml-auto gap-1.5"
+                onClick={() => docsDialogRef.current?.showModal()}
+                type="button"
+              >
+                <BookOpen size={16} />
+                <span>Docs</span>
+              </button>
             </div>
 
-            <textarea
-              aria-label="Resume Markdown"
-              className="markdown-editor textarea w-full resize-none rounded-none border-0 bg-base-100 font-mono text-[13px] leading-6 outline-none focus:outline-none"
-              onChange={(event) => {
-                setSaveStatus("Saving…");
-                setSource(event.target.value);
-              }}
-              ref={editorRef}
-              spellCheck="true"
-              value={source}
-            />
+            <div className="relative min-h-0 flex-1">
+              <textarea
+                aria-activedescendant={
+                  iconCompletion
+                    ? `icon-suggestion-${matchingIcons[activeIconIndex]}`
+                    : undefined
+                }
+                aria-autocomplete="list"
+                aria-controls="icon-suggestions"
+                aria-expanded={Boolean(iconCompletion)}
+                aria-label="Resume Markdown"
+                className="markdown-editor textarea h-full w-full resize-none rounded-none border-0 bg-base-100 font-mono text-[13px] leading-6 outline-none focus:outline-none"
+                onBlur={() => setIconCompletion(null)}
+                onChange={(event) => {
+                  const editor = event.currentTarget;
+                  setSaveStatus("Saving…");
+                  setSource(editor.value);
+                  syncIconCompletion(
+                    editor.value,
+                    editor.selectionStart,
+                    editor,
+                  );
+                }}
+                onKeyDown={handleEditorKeyDown}
+                onScroll={(event) => {
+                  if (iconCompletion) {
+                    positionIconSuggestions(
+                      event.currentTarget,
+                      matchingIcons.length,
+                    );
+                  }
+                }}
+                onSelect={(event) =>
+                  syncIconCompletion(
+                    event.currentTarget.value,
+                    event.currentTarget.selectionStart,
+                    event.currentTarget,
+                  )
+                }
+                ref={editorRef}
+                role="combobox"
+                spellCheck="true"
+                value={source}
+              />
+              {iconCompletion && (
+                <ul
+                  aria-label="Icon suggestions"
+                  className="menu menu-sm absolute z-10 max-h-52 w-52 overflow-auto rounded-box border border-base-300 bg-base-100 p-1 shadow-lg"
+                  id="icon-suggestions"
+                  role="listbox"
+                  style={iconMenuPosition}
+                >
+                  {matchingIcons.map((name, index) => {
+                    const Icon = ICON_COMPONENTS[name];
+                    return (
+                      <li key={name} role="none">
+                        <button
+                          aria-selected={index === activeIconIndex}
+                          className={index === activeIconIndex ? "menu-active" : ""}
+                          id={`icon-suggestion-${name}`}
+                          onPointerDown={(event) => {
+                            event.preventDefault();
+                            completeIcon(name);
+                          }}
+                          role="option"
+                          tabIndex="-1"
+                          type="button"
+                        >
+                          <Icon size={16} />
+                          <span>{ICON_LABELS[name]}</span>
+                          <code className="ml-auto text-xs text-base-content/55">
+                            {`{${name}}`}
+                          </code>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
           </section>
 
           <section
@@ -438,6 +937,12 @@ export default function App() {
             <div className="preview-chrome flex flex-wrap items-center justify-between gap-2 border-b border-base-300 bg-base-100 px-4 py-2 text-xs font-medium text-base-content/55">
               <div className="flex items-center gap-2">
                 <span>Live preview</span>
+                <span className="badge badge-ghost badge-sm">
+                  Theme: {selectedResumeTheme.name}
+                </span>
+                <span className="badge badge-success badge-sm">
+                  ATS-friendly
+                </span>
                 <span className="hidden md:inline">· Letter · single column · selectable text</span>
               </div>
               <div aria-label="Preview zoom controls" className="flex items-center gap-1">
@@ -485,8 +990,9 @@ export default function App() {
             <div
               aria-label={`Resume preview at ${Math.round(previewZoom * 100)}% zoom`}
               className="preview-stage"
+              ref={previewStageRef}
               tabIndex="0"
-              title="Focus here to use ⌘/Ctrl +, −, or 0"
+              title="Use ⌘/Ctrl + scroll to zoom; +, −, or 0 also work"
             >
               <div className="preview-zoom-surface">
                 <div className="preview-page-zoom" style={{ zoom: previewZoom }}>
@@ -535,20 +1041,7 @@ export default function App() {
                 />
                 <div className="theme-card-preview">
                   <div className="theme-card-document">
-                    <div className="resume-page" data-resume-theme={id}>
-                      <h1>John Doe</h1>
-                      <p>john.doe@example.com · City, ST</p>
-                      <hr />
-                      <h2>Experience</h2>
-                      <h3>Product Engineer — Example Co.</h3>
-                      <p><em>2022–Present</em></p>
-                      <ul>
-                        <li>Improved a core workflow by <strong>38%</strong>.</li>
-                        <li>Built reliable tools for customer teams.</li>
-                      </ul>
-                      <h2>Skills</h2>
-                      <p>React, TypeScript, PostgreSQL</p>
-                    </div>
+                    <ResumeDocument source={source} theme={id} />
                   </div>
                 </div>
                 <div className="card-body gap-1 p-4">
@@ -566,6 +1059,39 @@ export default function App() {
               </label>
             ))}
           </div>
+        </div>
+        <form className="modal-backdrop" method="dialog">
+          <button type="submit">Close</button>
+        </form>
+      </dialog>
+
+      <dialog className="modal docs-dialog" ref={docsDialogRef}>
+        <div className="modal-box max-w-lg">
+          <form className="absolute right-4 top-4" method="dialog">
+            <button aria-label="Close Markdown guide" className="btn btn-ghost btn-sm" type="submit">
+              Close
+            </button>
+          </form>
+          <div className="pr-20">
+            <h2 className="text-xl font-bold">Markdown guide</h2>
+            <p className="mt-1 text-sm text-base-content/60">
+              Write plain Markdown; the preview updates as you type.
+            </p>
+          </div>
+          <div className="mt-5 grid gap-2 text-sm">
+            {MARKDOWN_GUIDE.map(([syntax, description]) => (
+              <div
+                className="grid grid-cols-[minmax(8rem,auto)_1fr] items-center gap-4 rounded-box bg-base-200 px-3 py-2"
+                key={syntax}
+              >
+                <code className="font-mono">{syntax}</code>
+                <span className="text-base-content/65">{description}</span>
+              </div>
+            ))}
+          </div>
+          <p className="mt-4 text-xs text-base-content/55">
+            Icons: {ICON_NAMES.join(", ")}.
+          </p>
         </div>
         <form className="modal-backdrop" method="dialog">
           <button type="submit">Close</button>
