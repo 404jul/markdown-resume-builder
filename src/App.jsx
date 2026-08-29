@@ -260,105 +260,102 @@ export default function App() {
   return (
     <div className="app-shell min-h-screen bg-base-200 text-base-content">
       <header className="app-header border-b border-base-300 bg-base-100/90 backdrop-blur">
-        <div className="flex items-center justify-between gap-4 px-4 py-3 md:px-6">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-primary font-mono text-sm font-black text-primary-content shadow-sm">
+        <div className="navbar app-navbar min-h-16 flex-nowrap gap-3 px-3 md:px-5">
+          <div className="flex shrink-0 items-center gap-3">
+            <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-neutral font-mono text-sm font-black text-neutral-content">
               R.
             </div>
-            <div className="min-w-0">
+            <div className="hidden min-w-0 sm:block">
               <div className="flex items-center gap-2">
                 <h1 className="truncate text-base font-bold tracking-tight">Resume.md</h1>
-                <span className="badge badge-ghost badge-sm hidden sm:inline-flex">local-first</span>
+                <span className="badge badge-ghost badge-sm hidden xl:inline-flex">local-first</span>
               </div>
-              <p className="truncate text-xs text-base-content/55">ATS-friendly Markdown to PDF</p>
+              <p className="hidden truncate text-xs text-base-content/55 lg:block">ATS-friendly Markdown to PDF</p>
             </div>
           </div>
 
-          <button
-            aria-label={`Use ${appTheme === "business" ? "light" : "business"} theme`}
-            className="btn btn-ghost btn-circle btn-sm"
-            onClick={() => setAppTheme(appTheme === "business" ? "light" : "business")}
-            title={`Use ${appTheme === "business" ? "light" : "business"} theme`}
-            type="button"
-          >
-            {appTheme === "business" ? <Sun size={18} /> : <Moon size={18} />}
-          </button>
-        </div>
-      </header>
-
-      <main className="app-main p-3 md:p-5">
-        <section className="control-bar mb-4 rounded-2xl border border-base-300 bg-base-100 p-3 shadow-sm">
-          <div className="flex flex-wrap items-center gap-3">
-            <div aria-label="Editor view" className="tabs tabs-box" role="tablist">
+          <div className="app-navbar-tools flex min-w-0 flex-1 items-center gap-2 overflow-x-auto">
+            <div aria-label="Editor view" className="join shrink-0" role="tablist">
               {VIEWS.map(({ id, name, icon: Icon }) => (
                 <button
                   aria-selected={view === id}
-                  className={`tab gap-1.5 ${view === id ? "tab-active" : ""}`}
+                  className={`join-item btn btn-ghost btn-sm gap-1.5 ${view === id ? "btn-active" : ""}`}
                   key={id}
                   onClick={() => setView(id)}
                   role="tab"
                   type="button"
                 >
                   <Icon size={15} />
-                  <span className="hidden sm:inline">{name}</span>
+                  <span className="hidden lg:inline">{name}</span>
                 </button>
               ))}
             </div>
 
             <button
               aria-haspopup="dialog"
-              className="btn btn-outline btn-sm gap-2"
+              className="btn btn-ghost btn-sm shrink-0 gap-1.5"
               onClick={() => themeDialogRef.current?.showModal()}
               type="button"
             >
               <Palette size={16} />
-              <span className="hidden text-xs uppercase tracking-wider opacity-55 md:inline">Theme</span>
               <span>{selectedResumeTheme.name}</span>
             </button>
-
-            <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
-              <span className="hidden items-center gap-1.5 text-xs text-base-content/50 lg:flex">
-                <span className={`status status-xs ${saveStatus === "Saved locally" ? "status-success" : "status-warning"}`} />
-                {saveStatus}
-              </span>
-
-              <input
-                accept=".md,.markdown,text/markdown,text/plain"
-                className="hidden"
-                onChange={importMarkdown}
-                ref={fileInputRef}
-                type="file"
-              />
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={() => fileInputRef.current?.click()}
-                title="Open a Markdown file"
-                type="button"
-              >
-                <Upload size={16} />
-                <span className="hidden sm:inline">Open</span>
-              </button>
-              <button
-                className="btn btn-ghost btn-sm"
-                onClick={downloadMarkdown}
-                title="Download Markdown"
-                type="button"
-              >
-                <Download size={16} />
-                <span className="hidden sm:inline">Markdown</span>
-              </button>
-              <button
-                className="btn btn-primary btn-sm"
-                onClick={printResume}
-                title="Open the browser print dialog and choose Save as PDF"
-                type="button"
-              >
-                <Printer size={16} />
-                Print / PDF
-              </button>
-            </div>
           </div>
-        </section>
+
+          <div className="flex shrink-0 items-center gap-1">
+            <span className="mr-1 hidden items-center gap-1.5 text-xs text-base-content/50 xl:flex">
+              <span className={`status status-xs ${saveStatus === "Saved locally" ? "status-success" : "status-warning"}`} />
+              {saveStatus}
+            </span>
+
+            <input
+              accept=".md,.markdown,text/markdown,text/plain"
+              className="hidden"
+              onChange={importMarkdown}
+              ref={fileInputRef}
+              type="file"
+            />
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={() => fileInputRef.current?.click()}
+              title="Open a Markdown file"
+              type="button"
+            >
+              <Upload size={16} />
+              <span className="hidden lg:inline">Open</span>
+            </button>
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={downloadMarkdown}
+              title="Download Markdown"
+              type="button"
+            >
+              <Download size={16} />
+              <span className="hidden lg:inline">Markdown</span>
+            </button>
+            <button
+              className="btn btn-primary btn-sm"
+              onClick={printResume}
+              title="Open the browser print dialog and choose Save as PDF"
+              type="button"
+            >
+              <Printer size={16} />
+              <span className="hidden sm:inline">Print / PDF</span>
+            </button>
+            <button
+              aria-label={`Use ${appTheme === "business" ? "light" : "business"} theme`}
+              className="btn btn-ghost btn-square btn-sm"
+              onClick={() => setAppTheme(appTheme === "business" ? "light" : "business")}
+              title={`Use ${appTheme === "business" ? "light" : "business"} theme`}
+              type="button"
+            >
+              {appTheme === "business" ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main className="app-main p-3 md:p-4">
 
         <div className={`workspace workspace-${view}`}>
           <section className={`editor-panel card border border-base-300 bg-base-100 shadow-sm ${view === "preview" ? "screen-hidden" : ""}`}>

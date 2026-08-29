@@ -72,6 +72,14 @@ select {
   z-index: 20;
 }
 
+.app-navbar-tools {
+  scrollbar-width: none;
+}
+
+.app-navbar-tools::-webkit-scrollbar {
+  display: none;
+}
+
 .workspace {
   display: grid;
   gap: 1rem;
@@ -89,7 +97,7 @@ select {
 
 .editor-panel {
   display: flex;
-  height: calc(100dvh - 9.75rem);
+  height: calc(100dvh - 6rem);
   min-height: 34rem;
   overflow: hidden;
 }
@@ -115,7 +123,7 @@ select {
 
 .preview-stage {
   display: block;
-  max-height: calc(100dvh - 12.25rem);
+  max-height: calc(100dvh - 8.5rem);
   min-height: 34rem;
   overflow: auto;
   overscroll-behavior: contain;
@@ -190,10 +198,6 @@ select {
     padding: 0.65rem;
   }
 
-  .control-bar {
-    margin-bottom: 0.65rem;
-    border-radius: 0.85rem;
-  }
 
   .workspace {
     gap: 0.65rem;
@@ -219,7 +223,6 @@ select {
   }
 
   .app-header,
-  .control-bar,
   .editor-panel,
   .preview-chrome,
   .theme-dialog {
